@@ -29,13 +29,13 @@ if __name__ == '__main__':
     print(args)
 
     ### get handler
-    if args.model_name in ['instructgpt', 'newinstructgpt', 'chatgpt', 'gpt4', 'glm4', 'deepseek']:  # select the model
+    if args.model_name in ['instructgpt', 'newinstructgpt', 'chatgpt', 'gpt4', 'o3-mini', 'glm4', 'deepseek']:  # select the model
         handler = api_handler(args.model_name)
     else:
         raise ValueError
 
     ### get dataobj
-    dataobj = MyDataset('annotation_0203_21_34', args, traindata_obj=None)  # test_english
+    dataobj = MyDataset('annotation', args, traindata_obj=None)  # test_english
     version = '0203_21_34'
     ### set test range
     end_pos = len(dataobj) if args.end_pos == -1 else args.end_pos
@@ -84,14 +84,14 @@ if __name__ == '__main__':
 
     for idx in tqdm.tqdm(test_range, desc=f"{args.start_pos} ~ {end_pos}"):
         raw_sample = dataobj.get_by_idx(idx)
-        if raw_sample['id'] not in healthcare_ids or raw_sample['id'] in exist_data:
+        if raw_sample['id'] in exist_data:
             continue
         question = raw_sample['question']  
 
         realqid = idx
         data_info = fully_decode(question, handler, args)
         data_info['id'] = raw_sample['id']
-        data_info['remarks'] = raw_sample['remarks']
+        data_info['remarks'] = raw_sample.get('remarks', '')
         print(f'---- id : {data_info["id"]}')
         print(data_info)
         with open(exact_output_file, 'a+') as f:

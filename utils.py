@@ -355,7 +355,7 @@ def trans_relation_to_schema(relation_analyses_result, relation_attribute_analys
 
         elif relation_type_dict[relation_name][0] == '多对一':
             entity_name_1 = relationship_dict[relation_name][1]
-            entity_1_key = list(entity_keys_and_attribute_map[entity_name_1][1])
+            entity_1_key = list(entity_keys_and_attribute_map[entity_name_1][0])
             entity_name_n = relationship_dict[relation_name][0]
             attributes_all[entity_name_n].extend(entity_1_key)
 
@@ -389,14 +389,14 @@ def trans_relation_to_schema_for_domain(relation_analyses_result, attributes_all
             relation_attribute_list = relationship['关系属性']
             relation_attribute_list.extend(entity_n1_key)
             relation_attribute_list.extend(entity_n2_key)
-            multi_relation[relation_name] = {'属性':relation_attribute_list, '外键':{entity_n1_key[0]:{entity_name_n1:entity_n1_key[0]}, entity_n2_key[0]:{entity_name_n2: entity_n2_key[0]}}}  # 这个格式就跟实体的属性格式很像了
+            multi_relation[relation_name] = {'Attributes':relation_attribute_list, 'Foreign key':{entity_n1_key[0]:{entity_name_n1:entity_n1_key[0]}, entity_n2_key[0]:{entity_name_n2: entity_n2_key[0]}}}  # 这个格式就跟实体的属性格式很像了
 
         elif relationship['比例关系'] == '多对一':  # TODO 还需要给entity中加外键
             entity_name_1 = relationship[relation_name][1]
-            entity_1_key = list(entity_keys_and_attribute_map[entity_name_1][1])
+            entity_1_key = list(entity_keys_and_attribute_map[entity_name_1][0])
             entity_name_n = relationship[relation_name][0]
             attributes_all[entity_name_n].extend(entity_1_key)
-            attributes_all_with_foreign_key[entity_name_n] = {'属性':attributes_all[entity_name_n], '外键':{entity_1_key[0]:{entity_name_1:entity_1_key[0]}}}
+            attributes_all_with_foreign_key[entity_name_n] = {'Attributes':attributes_all[entity_name_n], 'Foreign key':{entity_1_key[0]:{entity_name_1:entity_1_key[0]}}}
 
 
         else:  # 无论是一对多还是一对一，把1端的主键加入到n端中
@@ -404,7 +404,7 @@ def trans_relation_to_schema_for_domain(relation_analyses_result, attributes_all
             entity_1_key = list(entity_keys_and_attribute_map[entity_name_1][0])  # TODO 默认这个时候的主键只有一个，因为在连接的实体主键一般只有一个
             entity_name_n = relationship[relation_name][1]
             attributes_all[entity_name_n].extend(entity_1_key)
-            attributes_all_with_foreign_key[entity_name_n] = {'属性':attributes_all[entity_name_n], '外键':{entity_1_key[0]:{entity_name_1:entity_1_key[0]}}}
+            attributes_all_with_foreign_key[entity_name_n] = {'Attributes':attributes_all[entity_name_n], 'Foreign key':{entity_1_key[0]:{entity_name_1:entity_1_key[0]}}}
 
 
     return multi_relation, attributes_all_with_foreign_key
@@ -417,13 +417,13 @@ def predict_entity_schema(entity_add_relation_attributes_all, entity_add_relatio
     '''将主键加入到属性集合中'''
     entity_attributes_all_and_key = {}
     for entity_name in entity_add_relation_attributes_all:
-        attributes = list(entity_add_relation_attributes_all[entity_name]['属性'])
-        if '外键' in entity_add_relation_attributes_all[entity_name]:
-            foreign_key = entity_add_relation_attributes_all[entity_name]['外键']
+        attributes = list(entity_add_relation_attributes_all[entity_name]['Attributes'])
+        if 'Foreign key' in entity_add_relation_attributes_all[entity_name]:
+            foreign_key = entity_add_relation_attributes_all[entity_name]['Foreign key']
         else:
             foreign_key = {}
         keys = list(entity_add_relation_keys_and_attribute_map[entity_name][0])
-        entity_attributes_all_and_key[entity_name] = {'属性':attributes, '主键':keys, '外键':foreign_key}
+        entity_attributes_all_and_key[entity_name] = {'Attributes':attributes, 'Primary key':keys, 'Foreign key':foreign_key}
 
     return entity_attributes_all_and_key
 
@@ -431,9 +431,9 @@ def predict_entity_schema(entity_add_relation_attributes_all, entity_add_relatio
 def predict_relation_schema(multi_relation, relation_keys_and_attribute_map):
     relation_attributes_all_and_key = {}
     for relation_name in multi_relation:  # multi_relation是一个list，其中每个元素对应一个关系。
-        attributes = list(multi_relation[relation_name]['属性'])
+        attributes = list(multi_relation[relation_name]['Attributes'])
         keys = list(relation_keys_and_attribute_map[relation_name][0])
-        relation_attributes_all_and_key[relation_name] = {'属性':attributes, '主键':keys, '外键':multi_relation[relation_name]['外键']}  # 这里还差一个外键
+        relation_attributes_all_and_key[relation_name] = {'Attributes':attributes, 'Primary key':keys, 'Foreign key':multi_relation[relation_name]['Foreign key']}  # 这里还差一个外键
 
     return relation_attributes_all_and_key
 

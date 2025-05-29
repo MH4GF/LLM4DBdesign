@@ -1,14 +1,15 @@
 import openai
 import time
 import random
+import os
 from wrapt_timeout_decorator import timeout
 from zhipuai import ZhipuAI
 from utils import extract_json_from_text
 
 # openai.api_type = "azure"
-openai.base_url = ""
+openai.base_url = "https://api.openai.com/v1"
 # openai.api_version = ""
-openai.api_key = ""
+openai.api_key = os.getenv("OPENAI_API_KEY", "your-openai-api-key-here")
 openai.default_headers = {"x-foo": "true"}
 
 
@@ -17,19 +18,35 @@ openai.default_headers = {"x-foo": "true"}
 def generate_response_multiagent(engine, temperature, max_tokens, frequency_penalty, presence_penalty, stop, system_role, user_input):
     print("Generating response for engine: ", engine)
     start_time = time.time()
-    response = openai.chat.completions.create(
-                    model=engine, # engine is the name of the deployment
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    top_p=1, # top_p的意思是选择概率质量值之和达到top_p的概率分布采样结果
-                    frequency_penalty=frequency_penalty,
-                    presence_penalty=presence_penalty,
-                    stop=stop,
-                    messages=[
-                        {"role": "system", "content": system_role},
-                        {"role": "user", "content": user_input}
-                    ],
-                )
+    
+    # o3-mini uses max_completion_tokens instead of max_tokens and doesn't support temperature=0
+    if engine == 'o3-mini':
+        response = openai.ChatCompletion.create(
+                        model=engine, # engine is the name of the deployment
+                        max_completion_tokens=max_tokens,
+                        top_p=1, # top_p的意思是选择概率质量值之和达到top_p的概率分布采样结果
+                        frequency_penalty=frequency_penalty,
+                        presence_penalty=presence_penalty,
+                        stop=stop,
+                        messages=[
+                            {"role": "system", "content": system_role},
+                            {"role": "user", "content": user_input}
+                        ],
+                    )
+    else:
+        response = openai.ChatCompletion.create(
+                        model=engine, # engine is the name of the deployment
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        top_p=1, # top_p的意思是选择概率质量值之和达到top_p的概率分布采样结果
+                        frequency_penalty=frequency_penalty,
+                        presence_penalty=presence_penalty,
+                        stop=stop,
+                        messages=[
+                            {"role": "system", "content": system_role},
+                            {"role": "user", "content": user_input}
+                        ],
+                    )
 
     # 用不了openai的，改成zhipu ai
     # response = client.chat.completions.create(
@@ -53,7 +70,7 @@ def generate_response_multiagent(engine, temperature, max_tokens, frequency_pena
 def generate_response(engine, temperature, max_tokens, frequency_penalty, presence_penalty, stop, input_text):
     print("Generating response for engine: ", engine)
     start_time = time.time()
-    response = openai.chat.completions.create(
+    response = openai.ChatCompletion.create(
                     model=engine, # engine is the name of the deployment
                     temperature=temperature,
                     max_tokens=max_tokens,
@@ -137,6 +154,8 @@ class api_handler:
             self.engine = 'gpt-3.5-turbo'
         elif self.model == 'gpt4':
             self.engine = 'gpt-4o-2024-08-06'  #gpt-4o-2024-08-06
+        elif self.model == 'o3-mini':
+            self.engine = 'o3-mini'
         elif self.model == 'deepseek':
             self.engine = 'deepseek-v3'  #gpt-4o-2024-08-06
 
@@ -157,7 +176,7 @@ class api_handler:
                 # if response.choices and response.choices[0].message and "content" in response.choices[0].message:
                 #     return response.choices[0].message["content"]
                 # 换成zhipu ai  openai 也适用
-                content = response.choices[0].message.content
+                content = response.choices[0].message['content']
                 print('************************************')
                 print(content)
                 response_json = extract_json_from_text(content)

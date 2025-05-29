@@ -377,9 +377,9 @@ def transform_json(data:json):
 
 def main():
     # 对所有的sample进行测试。
-    golden_answer_path = ['./datasets/RSchema/annotation_0203_21_34.jsonl']   # 这个是通过prepared_data.py处理后的，跟predict的格式一样。
-    predict_answer_path = ['./outputs/DBdesign/gpt4_chat_pipeline_0203_21_34.jsonl']
-    save_path = 'outputs/DBdesign/evaluation_91/gpt4_chat_pipeline_0203_21_34_91_evaluation.jsonl'
+    golden_answer_path = ['./datasets/RSchema/annotation.jsonl']   # 这个是通过prepared_data.py处理后的，跟predict的格式一样。
+    predict_answer_path = ['./outputs/DBdesign_domain/gpt4-domain_analyse-entity_verification, entity_denpendency_verification, relation_denpendency_verification_0203_21_34.jsonl']
+    save_path = 'outputs/DBdesign_domain/evaluation_gpt4_domain_analyse.jsonl'
 
     golden_answer = {}
     for path in golden_answer_path:
@@ -406,16 +406,18 @@ def main():
     fail_to_evalute = {}
     for i, predict_id in enumerate(predict_answer):
         print(f'compute sample: {i} id: {predict_id}----')
-        if predict_id not in nice_ids:
-            continue
+        # if predict_id not in nice_ids:
+        #     continue
         golden = golden_answer[predict_id]['answer']
-        if 'predict' not in predict_answer[predict_id]:  # answer predict # agent 框架的
+        if 'pred_schema' not in predict_answer[predict_id]:  # domain_analyse方法的
+        # if 'predict' not in predict_answer[predict_id]:  # answer predict # agent 框架的
         # if 'schema' not in predict_answer[predict_id]['answer']:  # direct 和cot方法的
             print('empty answer ......')
             continue
         else:
             try:
-                predict = predict_answer[predict_id]['predict']  # agent 框架的
+                predict = predict_answer[predict_id]['pred_schema']  # domain_analyse方法的
+                # predict = predict_answer[predict_id]['predict']  # agent 框架的
                 # predict = predict_answer[predict_id]['answer']['schema'] # direct 和cot方法的
                 scores = evaluate(golden, predict)  # 只有schema部分
             except Exception as e:

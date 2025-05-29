@@ -198,7 +198,7 @@ def fully_decode(question, handler, args):
         relation_all_attribute = {}
         for relation_item in multi_relation:
             for relation_name in relation_item:
-                relation_all_attribute[relation_name] = relation_item[relation_name]['属性']
+                relation_all_attribute[relation_name] = relation_item[relation_name]['Attributes']
         print(f'relation_all_attribute:\n {relation_all_attribute}')
 
         relation_functional_dependency_analyzer, prompt_get_relation_functional_dependency_analyses = get_relation_functional_dependency_analysis_prompt(
@@ -449,7 +449,7 @@ def fully_decode(question, handler, args):
         new_entity_add_relation_keys_and_attribute_map = {}
         for entity_name in transitive_partial_dependencies:
             if len(transitive_partial_dependencies[entity_name]['分解关系']) == 1:  # 表示不用拆表
-                new_entity_add_relation_attributes_all[entity_name]['属性'] = entity_add_relation_attributes_all[entity_name]
+                new_entity_add_relation_attributes_all[entity_name]['Attributes'] = entity_add_relation_attributes_all[entity_name]
                 new_entity_add_relation_keys_and_attribute_map[entity_name] = entity_add_relation_keys_and_attribute_map[entity_name]
             else:  # 需要拆表
                 for sub_table_attributes in transitive_partial_dependencies[entity_name]['分解关系']:
@@ -458,15 +458,15 @@ def fully_decode(question, handler, args):
                     new_entity_name = ''
                     for candidate_key in candidate_keys:
                         new_entity_name = ''.join(candidate_key)  # TODO 如果已经存在了这个new_entity_name 还需要额外的操作
-                    new_entity_add_relation_attributes_all[new_entity_name]['属性'] = sub_table_attributes
-                    new_entity_add_relation_attributes_all[new_entity_name]['外键'] = {}
+                    new_entity_add_relation_attributes_all[new_entity_name]['Attributes'] = sub_table_attributes
+                    new_entity_add_relation_attributes_all[new_entity_name]['Foreign key'] = {}
                     # 处理下外键关系
 
-                    foreign_keys = list(entity_attributes_all_with_foreign_key[entity_name]['外键'].keys())
+                    foreign_keys = list(entity_attributes_all_with_foreign_key[entity_name]['Foreign key'].keys())
                     common_keys = get_common_element_list(foreign_keys, sub_table_attributes)
 
                     for key in common_keys:
-                        new_entity_add_relation_attributes_all[new_entity_name]['外键'][key] = entity_attributes_all_with_foreign_key[entity_name]['外键'][key]
+                        new_entity_add_relation_attributes_all[new_entity_name]['Foreign key'][key] = entity_attributes_all_with_foreign_key[entity_name]['Foreign key'][key]
                     new_entity_add_relation_keys_and_attribute_map[new_entity_name] = candidate_keys
 
         print(f'new_entity_add_relation_attributes_all:\n {new_entity_add_relation_attributes_all}')
@@ -479,7 +479,7 @@ def fully_decode(question, handler, args):
         # 9. 识别关系中关系属性之间的函数依赖，这里是为了拆表。
         relation_all_attribute = {}
         for relation_name in multi_relation:
-            relation_all_attribute[relation_name] = multi_relation[relation_name]['属性']
+            relation_all_attribute[relation_name] = multi_relation[relation_name]['Attributes']
         print(f'relation_all_attribute:\n {relation_all_attribute}')
 
         if relation_all_attribute:
@@ -571,7 +571,7 @@ def fully_decode(question, handler, args):
 
                     for key in revised_relation_analyses_result:
                         new_multi_relation[key] = revised_relation_analyses_result[key]
-                        new_relation_keys_and_attribute_map[key] = [set(revised_relation_analyses_result[key]['主键'])]
+                        new_relation_keys_and_attribute_map[key] = [set(revised_relation_analyses_result[key]['Primary key'])]
                 else:
                     new_multi_relation[relation_name] = multi_relation[relation_name]
                     new_relation_keys_and_attribute_map[relation_name] = relation_keys_and_attribute_map[relation_name]
